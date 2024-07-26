@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1721974159085,
+    "title": "Queso",
+    "description": "Cremoso",
+    "code": "2",
+    "price": 200,
+    "status": true,
+    "stock": 100,
+    "category": "Lacteos",
+    "thumbnails": [
+      "hola",
+      "holas",
+      "a"
+    ]
+  }
+]
