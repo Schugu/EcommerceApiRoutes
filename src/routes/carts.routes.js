@@ -1,5 +1,8 @@
 import { Router } from 'express';
 
+import { validateSchema, validateSchemaPartial } from "../middlewares/validateSchema.js";
+import { cartItemSchema, cartSchema } from "../schemas/carts.js";
+
 import {
   getCarts,
   newCart,
@@ -13,7 +16,7 @@ import {
 
 const router = Router();
 
-router.post('/carts', newCart);
+router.post('/carts', validateSchema(cartSchema), newCart);
 
 router.get('/carts', getCarts);
 
@@ -23,9 +26,9 @@ router.delete('/carts/:cartId', deleteCart);
 
 router.get('/carts/:cartId/product/:productId', getProductOnCart);
 
-router.put('/carts/:cartId/product/:productId', updateProductOnCart);
+router.put('/carts/:cartId/product/:productId', validateSchemaPartial(cartItemSchema), updateProductOnCart);
 
-router.post('/carts/:cartId/product', newProductOnCart);
+router.post('/carts/:cartId/product', validateSchema(cartItemSchema), newProductOnCart);
 
 router.delete('/carts/:cartId/product/:productId', deleteProductOnCart);
 

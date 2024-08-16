@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const cartSchema = z.object({
+export const cartItemSchema = z.object({
   product: z.string({
     invalid_type_error: "El campo 'product' debe ser string.",
     required_error: "El campo 'product' es requerido."
@@ -16,15 +16,7 @@ const cartSchema = z.object({
     .max(999, { message: "La cantidad no puede ser mayor a 999." }),
 });
 
-
-export function validateCart(object) {
-  return cartSchema.safeParse(object);
-}
-
-
-const quantitySchema = cartSchema.pick({
-  quantity: true
+export const cartSchema = z.object({
+  products: z.array(cartItemSchema) 
 });
-export function validateCartPartial(object) {
-  return quantitySchema.safeParse(object);
-}
+

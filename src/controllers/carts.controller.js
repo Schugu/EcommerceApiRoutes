@@ -1,6 +1,5 @@
 import fs from 'fs';
 import moment from "moment"
-import { validateCart, validateCartPartial } from "../schemas/carts.js";
 
 const filePath = 'src/dataBase/carts.json';
 
@@ -25,20 +24,7 @@ const writeCartsFromFile = (users) => {
 };
 
 export const newCart = (req, res) => {
-
-  let { products } = req.body;
-
-  if (!products) {
-    return res.status(400).json({ message: "Faltan campos requeridos." });
-  }
-
-  for (const item of products) {
-    const result = validateCart(item);
-
-    if (result.error) {
-      return res.status(400).json({ error: JSON.parse(result.error.message) });
-    }
-  }
+  const { products } = req.body;
 
   const newCart = {
     id: Date.now(),
@@ -109,13 +95,7 @@ export const newProductOnCart = (req, res) => {
     return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
   }
 
-  const result = validateCart(req.body);
-
-  if (result.error) {
-    return res.status(400).json({ error: JSON.parse(result.error.message) });
-  }
-
-  const { product, quantity } = result.data;
+  const { product, quantity } = req.body;
 
   const productIndex = cartFound.products.findIndex((item) => item.product === product);
 
@@ -169,12 +149,7 @@ export const updateProductOnCart = (req, res) => {
     return res.status(404).json({ message: `No existe ningún carrito con el ID: ${cartId}` });
   }
 
-  const result = validateCartPartial(req.body);
-  if (result.error) {
-    return res.status(400).json({ error: result.error.format() });
-  }
-
-  const { quantity } = result.data;
+  const { quantity } = req.body;
   const productId = req.params.productId;
 
   const productIndex = cartFound.products.findIndex((item) => item.product === productId);
