@@ -24,7 +24,30 @@ const writeProductsToFile = (products) => {
 };
 
 export const getProducts = (req, res) => {
+  const { code, category, title } = req.query;
   const dataProducts = readProductsFromFile();
+
+  if (code) {
+    const filterProducts = dataProducts.filter(
+      product => product.code.includes(code)
+    )
+    return res.json(filterProducts);
+  }
+
+  if (category) {
+    const filterProducts = dataProducts.filter(
+      product => product.category.toLowerCase() === category.toLowerCase()
+    );
+    return res.json(filterProducts);
+  }
+
+  if (title) {
+    const filterProducts = dataProducts.filter(
+      product => product.title.toLowerCase() === title.toLowerCase()
+    );
+    return res.json(filterProducts);
+  }
+
   res.json(dataProducts); // Cambiado a .json para un retorno más estándar
 };
 
