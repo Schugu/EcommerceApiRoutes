@@ -1,6 +1,6 @@
 import fs from 'fs';
 import moment from "moment"
-import validateProduct from "../schemas/products.js";
+import { validateProduct, validateProductPartial } from "../schemas/products.js";
 
 const filePath = 'src/dataBase/products.json';
 
@@ -129,7 +129,7 @@ export const updateProduct = (req, res) => {
     return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}` });
   }
 
-  const { error, data } = validateProduct(req.body);
+  const { error, data } = validateProductPartial(req.body);
 
   if (error) {
     return res.status(400).json({ error: JSON.parse(error.message) });
@@ -142,16 +142,18 @@ export const updateProduct = (req, res) => {
   const arraysAreEqual = (arr1, arr2) => arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
 
   const updateField = (field, newValue) => {
-    if (field === "thumbnails") {
-      if (!arraysAreEqual(product[field], newValue)) {
-        updateMessages[field] = `${JSON.stringify(product[field])} => ${JSON.stringify(newValue)}`;
+    if (newValue !== undefined) { // Solo actualizar si newValue está definido
+      if (field === "thumbnails") {
+        if (!arraysAreEqual(product[field] || [], newValue)) {
+          updateMessages[field] = `${JSON.stringify(product[field])} => ${JSON.stringify(newValue)}`;
+          product[field] = newValue;
+          productUpdated = true;
+        }
+      } else if (product[field] !== newValue) {
+        updateMessages[field] = `${product[field]} => ${newValue}`;
         product[field] = newValue;
         productUpdated = true;
       }
-    } else if (product[field] !== newValue) {
-      updateMessages[field] = `${product[field]} => ${newValue}`;
-      product[field] = newValue;
-      productUpdated = true;
     }
   };
 

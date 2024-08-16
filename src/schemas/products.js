@@ -44,8 +44,13 @@ const productSchema = z.object({
 });
 
 
-export default function validateProduct(object) {
+export function validateProduct(object) {
   return productSchema.safeParse(object);
+}
+
+export function validateProductPartial(object) {
+  const partialproductSchema = productSchema.partial();
+  return partialproductSchema.safeParse(object);
 }
 
 
