@@ -13,7 +13,7 @@ import {
 
 const router = Router();
 
-router.post('/carts/new', newCart);
+router.post('/carts', newCart);
 
 router.get('/carts', getCarts);
 
@@ -25,7 +25,7 @@ router.get('/carts/:cartId/product/:productId', getProductOnCart);
 
 router.put('/carts/:cartId/product/:productId', updateProductOnCart);
 
-router.post('/carts/:cartId/product/new', newProductOnCart);
+router.post('/carts/:cartId/product', newProductOnCart);
 
 router.delete('/carts/:cartId/product/:productId', deleteProductOnCart);
 
