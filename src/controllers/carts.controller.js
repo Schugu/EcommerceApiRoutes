@@ -1,8 +1,10 @@
 import fs from 'fs';
+import moment from "moment"
+import { validateCart, validateCartPartial } from "../schemas/carts.js";
 
 const filePath = 'src/dataBase/carts.json';
 
-const readUsersFromFile = () => {
+const readCartsFromFile = () => {
   try {
     if (!fs.existsSync(filePath)) {
       return [];
@@ -14,7 +16,7 @@ const readUsersFromFile = () => {
   }
 };
 
-const writeUsersToFile = (users) => {
+const writeCartsFromFile = (users) => {
   try {
     fs.writeFileSync(filePath, JSON.stringify(users, null, 2), 'utf-8');
   } catch (error) {
@@ -23,6 +25,7 @@ const writeUsersToFile = (users) => {
 };
 
 export const newCart = (req, res) => {
+
   let { products } = req.body;
 
   if (!products) {
@@ -30,30 +33,28 @@ export const newCart = (req, res) => {
   }
 
   for (const item of products) {
-    const { product, quantity } = item;
+    const result = validateCart(item);
 
-    if (!product || typeof product !== "string") {
-      return res.status(400).json({ message: "El campo 'product' debe ser un texto." });
-    }
-
-    if (typeof quantity !== "number" || quantity < 1) {
-      return res.status(400).json({ message: "El campo 'quantity' debe ser un número y debe ser mayor a 0." });
+    if (result.error) {
+      return res.status(400).json({ error: JSON.parse(result.error.message) });
     }
   }
 
-  const id = Date.now();
+  const newCart = {
+    id: Date.now(),
+    Time: moment().format('YYYY-MM-DD HH:mm:ss'),
+    products
+  };
 
-  const newCart = { id, products };
-
-  const dataCarts = readUsersFromFile();
+  const dataCarts = readCartsFromFile();
   dataCarts.push(newCart);
-  writeUsersToFile(dataCarts);
+  writeCartsFromFile(dataCarts);
 
   res.status(201).json({ message: "Carrito creado exitosamente.", cart: newCart });
 };
 
 export const getCarts = (req, res) => {
-  const dataCarts = readUsersFromFile();
+  const dataCarts = readCartsFromFile();
   res.send(dataCarts);
 };
 
@@ -64,7 +65,7 @@ export const getCart = (req, res) => {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readUsersFromFile();
+  const dataCarts = readCartsFromFile();
   const cartFound = dataCarts.find((cart) => cart.id === cartId);
 
   if (!cartFound) {
@@ -81,7 +82,7 @@ export const deleteCart = (req, res) => {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readUsersFromFile();
+  const dataCarts = readCartsFromFile();
   const cartIndex = dataCarts.findIndex((cart) => cart.id === cartId);
 
   if (cartIndex === -1) {
@@ -89,7 +90,7 @@ export const deleteCart = (req, res) => {
   }
 
   const [deletedCart] = dataCarts.splice(cartIndex, 1);
-  writeUsersToFile(dataCarts);
+  writeCartsFromFile(dataCarts);
 
   res.status(200).json({ message: `Carrito con el ID: ${cartId} eliminado exitosamente.`, deletedCart });
 };
@@ -101,22 +102,20 @@ export const newProductOnCart = (req, res) => {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readUsersFromFile();
+  const dataCarts = readCartsFromFile();
   const cartFound = dataCarts.find((cart) => cart.id === cartId);
 
   if (!cartFound) {
     return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
   }
 
-  const { product, quantity } = req.body;
+  const result = validateCart(req.body);
 
-  if (!product || typeof product !== "string") {
-    return res.status(400).json({ message: "El campo 'product' debe ser un texto." });
+  if (result.error) {
+    return res.status(400).json({ error: JSON.parse(result.error.message) });
   }
 
-  if (typeof quantity !== "number" || quantity < 1) {
-    return res.status(400).json({ message: "El campo 'quantity' debe ser un número y debe ser mayor a 0." });
-  }
+  const { product, quantity } = result.data;
 
   const productIndex = cartFound.products.findIndex((item) => item.product === product);
 
@@ -124,11 +123,11 @@ export const newProductOnCart = (req, res) => {
     const newProduct = { product, quantity };
 
     cartFound.products.push(newProduct);
-    writeUsersToFile(dataCarts);
+    writeCartsFromFile(dataCarts);
     return res.status(201).json({ message: "Producto agregado al carrito exitosamente.", newProduct });
   } else {
     cartFound.products[productIndex].quantity += quantity;
-    writeUsersToFile(dataCarts);
+    writeCartsFromFile(dataCarts);
     return res.status(200).json({ message: "Cantidad del producto actualizada exitosamente.", updatedProduct: cartFound.products[productIndex] });
   }
 };
@@ -140,7 +139,7 @@ export const getProductOnCart = (req, res) => {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readUsersFromFile();
+  const dataCarts = readCartsFromFile();
   const cartFound = dataCarts.find((cart) => cart.id === cartId);
 
   if (!cartFound) {
@@ -163,25 +162,31 @@ export const updateProductOnCart = (req, res) => {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readUsersFromFile();
+  const dataCarts = readCartsFromFile();
   const cartFound = dataCarts.find((cart) => cart.id === cartId);
 
-  const { quantity } = req.body;
-
-  if (typeof quantity !== "number" || quantity < 1) {
-    return res.status(400).json({ message: "El campo 'quantity' debe ser un número y debe ser mayor a 0." });
+  if (!cartFound) {
+    return res.status(404).json({ message: `No existe ningún carrito con el ID: ${cartId}` });
   }
 
-  const productIndex = cartFound.products.findIndex((item) => item.product === req.params.productId);
+  const result = validateCartPartial(req.body);
+  if (result.error) {
+    return res.status(400).json({ error: result.error.format() });
+  }
+
+  const { quantity } = result.data;
+  const productId = req.params.productId;
+
+  const productIndex = cartFound.products.findIndex((item) => item.product === productId);
 
   if (productIndex === -1) {
-    return res.status(404).json({ message: `No existe ningún producto con el ID: ${req.params.productId}` });
+    return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}` });
   }
 
   let productUpdated = false;
   const updateMessages = {};
 
-  if (cartFound.products[productIndex].quantity !== quantity) {
+  if (quantity !== undefined && cartFound.products[productIndex].quantity !== quantity) {
     const oldQuantity = cartFound.products[productIndex].quantity;
     updateMessages.quantity = `${oldQuantity} => ${quantity}`;
     cartFound.products[productIndex].quantity = quantity;
@@ -192,8 +197,9 @@ export const updateProductOnCart = (req, res) => {
     return res.status(304).json({ message: "No se realizaron cambios." });
   }
 
-  writeUsersToFile(dataCarts);
-  return res.status(200).json({ message: `Producto con el ID: ${req.params.productId} actualizado exitosamente.`, updates: updateMessages });
+  cartFound.updated = moment().format('YYYY-MM-DD HH:mm:ss');
+  writeCartsFromFile(dataCarts);
+  return res.status(200).json({ message: `Producto con el ID: ${productId} actualizado exitosamente.`, updates: updateMessages });
 };
 
 export const deleteProductOnCart = (req, res) => {
@@ -204,7 +210,7 @@ export const deleteProductOnCart = (req, res) => {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readUsersFromFile();
+  const dataCarts = readCartsFromFile();
   const cartFound = dataCarts.find((cart) => cart.id === cartId);
 
   if (!cartFound) {
@@ -218,7 +224,7 @@ export const deleteProductOnCart = (req, res) => {
   }
 
   cartFound.products.splice(productIndex, 1);
-  writeUsersToFile(dataCarts);
+  writeCartsFromFile(dataCarts);
 
   return res.status(200).json({ message: `Producto con el ID: ${productId} eliminado del carrito con el ID: ${cartId}.` });
 };
