@@ -1,6 +1,5 @@
 import fs from 'fs';
 import moment from "moment"
-import { validateProduct, validateProductPartial } from "../schemas/products.js";
 
 const filePath = 'src/dataBase/products.json';
 
@@ -50,7 +49,7 @@ export const getProducts = (req, res) => {
     return res.json(filterProducts);
   }
 
-  res.json(dataProducts); // Cambiado a .json para un retorno más estándar
+  res.json(dataProducts);
 };
 
 export const getProduct = (req, res) => {
@@ -71,22 +70,19 @@ export const getProduct = (req, res) => {
 };
 
 export const newProduct = (req, res) => {
-  const result = validateProduct(req.body);
-
-  if (result.error) {
-    return res.status(400).json({ error: JSON.parse(result.error.message) });
-  }
+  const { code } = req.body;
 
   const dataProducts = readProductsFromFile();
-  if (dataProducts.some((product) => product.code === result.data.code)) {
-    return res.status(400).json({ message: `El producto con el código ${result.data.code} ya existe.` });
+
+  if (dataProducts.some((product) => product.code === code)) {
+    return res.status(400).json({ message: `El producto con el código ${code} ya existe.` });
   }
 
   const newProduct = {
     id: Date.now(),
     status: true,
     Time: moment().format('YYYY-MM-DD HH:mm:ss'),
-    ...result.data
+    ...req.body
   };
 
   dataProducts.push(newProduct);
@@ -129,12 +125,6 @@ export const updateProduct = (req, res) => {
     return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}` });
   }
 
-  const { error, data } = validateProductPartial(req.body);
-
-  if (error) {
-    return res.status(400).json({ error: JSON.parse(error.message) });
-  }
-
   const product = dataProducts[productIndex];
   const updateMessages = {};
   let productUpdated = false;
@@ -157,7 +147,7 @@ export const updateProduct = (req, res) => {
     }
   };
 
-  ["title", "description", "code", "price", "stock", "category", "thumbnails"].forEach(field => updateField(field, data[field]));
+  ["title", "description", "code", "price", "stock", "category", "thumbnails"].forEach(field => updateField(field, req.body[field]));
 
   if (!productUpdated) {
     return res.status(304).end();

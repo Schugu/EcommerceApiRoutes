@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const productSchema = z.object({
+export const productSchema = z.object({
   title: z.string({
     invalid_type_error: "El campo 'title' debe ser texto.",
     required_error: "El campo 'title' es requerido."
@@ -42,15 +42,5 @@ const productSchema = z.object({
     invalid_type_error: "Thumbnails debe ser un array.",
   }).default([]),
 });
-
-
-export function validateProduct(object) {
-  return productSchema.safeParse(object);
-}
-
-export function validateProductPartial(object) {
-  const partialproductSchema = productSchema.partial();
-  return partialproductSchema.safeParse(object);
-}
 
 
