@@ -129,44 +129,14 @@ export const updateProduct = (req, res) => {
     return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}` });
   }
 
-  let { title, description, code, price, stock, category, thumbnails } = req.body;
+  const result = validateProduct(req.body);
 
-  // Validación de campos requeridos
-  if (!title || !description || !code || !price || !stock || !category) {
-    return res.status(400).json({ message: "Faltan campos requeridos." });
-  }
-
-  // Validación de tipos de datos
-  if (typeof title !== "string") {
-    return res.status(400).json({ message: "El título debe ser texto." });
-  }
-  if (typeof description !== "string") {
-    return res.status(400).json({ message: "La descripción debe ser texto." });
-  }
-  if (typeof code !== "string") {
-    return res.status(400).json({ message: "El código debe ser texto." });
-  }
-  if (typeof price !== "number") {
-    return res.status(400).json({ message: "El precio debe ser un número." });
-  }
-  if (typeof stock !== "number") {
-    return res.status(400).json({ message: "El stock debe ser un número." });
-  }
-  if (typeof category !== "string") {
-    return res.status(400).json({ message: "La categoría debe ser texto." });
+  if (result.error) {
+    return res.status(400).json({ error: JSON.parse(result.error.message) });
   }
 
-  // Validación de thumbnails
-  if (thumbnails) {
-    if (!Array.isArray(thumbnails)) {
-      return res.status(400).json({ message: "Thumbnails debe ser un array." });
-    }
-    if (!thumbnails.every(item => typeof item === "string")) {
-      return res.status(400).json({ message: "Cada elemento de thumbnails debe ser un texto." });
-    }
-  } else {
-    thumbnails = [];
-  }
+  let { title, description, code, price, stock, category, thumbnails } = result.data;
+
 
   const arraysAreEqual = (arr1, arr2) => {
     if (arr1.length !== arr2.length) return false;
@@ -227,7 +197,7 @@ export const updateProduct = (req, res) => {
   }
 
   if (!productUpdated) {
-    return res.status(304).json({ message: "No se realizaron cambios." });
+    return res.status(304).end();
   }
 
   writeProductsToFile(dataProducts);
