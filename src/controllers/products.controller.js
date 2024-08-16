@@ -71,7 +71,7 @@ export const getProduct = (req, res) => {
 
 export const newProduct = (req, res) => {
   const { code } = req.body;
-
+  
   const dataProducts = readProductsFromFile();
 
   if (dataProducts.some((product) => product.code === code)) {

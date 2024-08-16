@@ -14,9 +14,9 @@ export const cartItemSchema = z.object({
     .positive({ message: "La cantidad debe ser un número positivo." })
     .int({ message: "La cantidad debe ser un número entero." })
     .max(999, { message: "La cantidad no puede ser mayor a 999." }),
-});
+}).strict();
 
 export const cartSchema = z.object({
   products: z.array(cartItemSchema) 
-});
+}).strict();
 

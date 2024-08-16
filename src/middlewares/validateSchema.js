@@ -12,8 +12,7 @@ export const validateSchema = (schema) => (req, res, next) => {
 
 export const validateSchemaPartial = (schema) => (req, res, next) => {
   try {
-    const partialSchema = schema.partial();
-    partialSchema.parse(req.body);
+    schema.partial().parse(req.body);
     next();
 
   } catch (error) {

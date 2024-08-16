@@ -41,6 +41,6 @@ export const productSchema = z.object({
   thumbnails: z.array(z.string(), {
     invalid_type_error: "Thumbnails debe ser un array.",
   }).default([]),
-});
+}).strict(); 
 
 
