@@ -6,9 +6,9 @@ import productsRoutes from './routes/products.routes.js';
 import cartsRoutes from './routes/carts.routes.js';
 
 const app = express();
-
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: true })); 
+app.disable("x-powered-by");
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(logger("dev"))
 app.use(function (req, res, next) {
   console.log("Time:", moment().format('YYYY-MM-DD HH:mm:ss'));
