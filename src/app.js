@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from "cors";
 import logger from "morgan"
 import moment from "moment"
 
@@ -6,6 +7,12 @@ import productsRoutes from './routes/products.routes.js';
 import cartsRoutes from './routes/carts.routes.js';
 
 const app = express();
+
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
+
 app.disable("x-powered-by");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
