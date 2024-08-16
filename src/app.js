@@ -18,7 +18,7 @@ app.use(function (req, res, next) {
 app.use('/api', productsRoutes);
 app.use('/api', cartsRoutes);
 
-app.get('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).send('Ruta no encontrada :/');
 });
 export default app;
