@@ -129,77 +129,41 @@ export const updateProduct = (req, res) => {
     return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}` });
   }
 
-  const result = validateProduct(req.body);
+  const { error, data } = validateProduct(req.body);
 
-  if (result.error) {
-    return res.status(400).json({ error: JSON.parse(result.error.message) });
+  if (error) {
+    return res.status(400).json({ error: JSON.parse(error.message) });
   }
 
-  let { title, description, code, price, stock, category, thumbnails } = result.data;
+  const product = dataProducts[productIndex];
+  const updateMessages = {};
+  let productUpdated = false;
 
+  const arraysAreEqual = (arr1, arr2) => arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
 
-  const arraysAreEqual = (arr1, arr2) => {
-    if (arr1.length !== arr2.length) return false;
-    return arr1.every((value, index) => value === arr2[index]);
+  const updateField = (field, newValue) => {
+    if (field === "thumbnails") {
+      if (!arraysAreEqual(product[field], newValue)) {
+        updateMessages[field] = `${JSON.stringify(product[field])} => ${JSON.stringify(newValue)}`;
+        product[field] = newValue;
+        productUpdated = true;
+      }
+    } else if (product[field] !== newValue) {
+      updateMessages[field] = `${product[field]} => ${newValue}`;
+      product[field] = newValue;
+      productUpdated = true;
+    }
   };
 
-  let productUpdated = false;
-  const updateMessages = {};
-
-  // Comparar y actualizar propiedades
-  if (dataProducts[productIndex].title !== title) {
-    const oldTitle = dataProducts[productIndex].title;
-    updateMessages.title = `${oldTitle} => ${title}`;
-    dataProducts[productIndex].title = title;
-    productUpdated = true;
-  }
-
-  if (dataProducts[productIndex].description !== description) {
-    const oldDescription = dataProducts[productIndex].description;
-    updateMessages.description = `${oldDescription} => ${description}`;
-    dataProducts[productIndex].description = description;
-    productUpdated = true;
-  }
-
-  if (dataProducts[productIndex].code !== code) {
-    const oldCode = dataProducts[productIndex].code;
-    updateMessages.code = `${oldCode} => ${code}`;
-    dataProducts[productIndex].code = code;
-    productUpdated = true;
-  }
-
-  if (dataProducts[productIndex].price !== price) {
-    const oldPrice = dataProducts[productIndex].price;
-    updateMessages.price = `${oldPrice} => ${price}`;
-    dataProducts[productIndex].price = price;
-    productUpdated = true;
-  }
-
-  if (dataProducts[productIndex].stock !== stock) {
-    const oldStock = dataProducts[productIndex].stock;
-    updateMessages.stock = `${oldStock} => ${stock}`;
-    dataProducts[productIndex].stock = stock;
-    productUpdated = true;
-  }
-
-  if (dataProducts[productIndex].category !== category) {
-    const oldCategory = dataProducts[productIndex].category;
-    updateMessages.category = `${oldCategory} => ${category}`;
-    dataProducts[productIndex].category = category;
-    productUpdated = true;
-  }
-
-  if (!arraysAreEqual(dataProducts[productIndex].thumbnails, thumbnails)) {
-    const oldThumbnails = dataProducts[productIndex].thumbnails;
-    updateMessages.thumbnails = `${JSON.stringify(oldThumbnails)} => ${JSON.stringify(thumbnails)}`;
-    dataProducts[productIndex].thumbnails = thumbnails;
-    productUpdated = true;
-  }
+  ["title", "description", "code", "price", "stock", "category", "thumbnails"].forEach(field => updateField(field, data[field]));
 
   if (!productUpdated) {
     return res.status(304).end();
   }
 
+  product.updated = moment().format('YYYY-MM-DD HH:mm:ss');
+  dataProducts[productIndex] = product;
   writeProductsToFile(dataProducts);
-  return res.status(200).json({ Modificaciones: updateMessages });
+
+  return res.status(200).json({ Modificaciones: updateMessages, actualizado: product.updated });
 };
