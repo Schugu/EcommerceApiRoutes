@@ -13,7 +13,7 @@ router.get('/products', getProducts);
 
 router.get('/products/:productId', getProduct);
 
-router.put('/products/:productId', validateSchemaPartial(productSchema), updateProduct);
+router.patch('/products/:productId', validateSchemaPartial(productSchema), updateProduct);
 
 router.delete('/products/:productId', deleteProduct);
 

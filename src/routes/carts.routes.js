@@ -26,7 +26,7 @@ router.delete('/carts/:cartId', deleteCart);
 
 router.get('/carts/:cartId/product/:productId', getProductOnCart);
 
-router.put('/carts/:cartId/product/:productId', validateSchemaPartial(cartItemSchema), updateProductOnCart);
+router.patch('/carts/:cartId/product/:productId', validateSchemaPartial(cartItemSchema), updateProductOnCart);
 
 router.post('/carts/:cartId/product', validateSchema(cartItemSchema), newProductOnCart);
 
