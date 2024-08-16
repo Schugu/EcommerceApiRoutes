@@ -1,4 +1,6 @@
 import fs from 'fs';
+import moment from "moment"
+import validateProduct from "../schemas/products.js";
 
 const filePath = 'src/dataBase/products.json';
 
@@ -69,55 +71,22 @@ export const getProduct = (req, res) => {
 };
 
 export const newProduct = (req, res) => {
-  let { title, description, code, price, stock, category, thumbnails } = req.body;
+  const result = validateProduct(req.body);
 
-  // Validación de campos requeridos
-  if (!title || !description || !code || !price || !stock || !category) {
-    return res.status(400).json({ message: "Faltan campos requeridos." });
-  }
-
-  // Validación de tipos de datos
-  if (typeof title !== "string") {
-    return res.status(400).json({ message: "El campo 'title' debe ser texto." });
-  }
-  if (typeof description !== "string") {
-    return res.status(400).json({ message: "El campo 'description' debe ser texto." });
-  }
-  if (typeof code !== "string") {
-    return res.status(400).json({ message: "El campo 'code' debe ser texto." });
-  }
-  if (typeof price !== "number" || price < 1) {
-    return res.status(400).json({ message: "El campo 'price' debe ser un número y debe ser mayor a 0." });
-  }
-  if (typeof stock !== "number") {
-    return res.status(400).json({ message: "El campo 'stock' debe ser un número." });
-  }
-  if (typeof category !== "string") {
-    return res.status(400).json({ message: "El campo 'category' debe ser texto." });
+  if (result.error) {
+    return res.status(400).json({ error: JSON.parse(result.error.message) });
   }
 
   const dataProducts = readProductsFromFile();
-  if (dataProducts.some((product) => product.code === code)) {
-    return res.status(400).json({ message: `El producto con el código ${code} ya existe.` });
+  if (dataProducts.some((product) => product.code === result.data.code)) {
+    return res.status(400).json({ message: `El producto con el código ${result.data.code} ya existe.` });
   }
-
-  // Validación de thumbnails
-  if (thumbnails) {
-    if (!Array.isArray(thumbnails)) {
-      return res.status(400).json({ message: "Thumbnails debe ser un array." });
-    }
-    if (!thumbnails.every(item => typeof item === "string")) {
-      return res.status(400).json({ message: "Cada elemento de thumbnails debe ser un texto." });
-    }
-  } else {
-    thumbnails = [];
-  }
-
-  const id = Date.now();
-  const status = true;
 
   const newProduct = {
-    id, title, description, code, price, status, stock, category, thumbnails
+    id: Date.now(),
+    status: true,
+    Time: moment().format('YYYY-MM-DD HH:mm:ss'),
+    ...result.data
   };
 
   dataProducts.push(newProduct);
