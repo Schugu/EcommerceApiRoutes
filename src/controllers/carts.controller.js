@@ -1,205 +1,186 @@
-import fs from 'fs';
-import moment from "moment"
+import { CartModel } from "../models/cart.js";
 
-const filePath = 'src/dataBase/carts.json';
 
-const readCartsFromFile = () => {
+export const newCart = async (req, res) => {
   try {
-    if (!fs.existsSync(filePath)) {
-      return [];
+    const result = await CartModel.newCart(req.body);
+
+    if (!result) {
+      return res.status(400).json({ message: `Error al crear el carrito.` });
     }
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
+    return res.status(201).json({ message: "Carrito creado exitosamente.", cart: result });
   } catch (error) {
-    console.error("Error al leer el archivo:", error);
-    return [];
+    return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
   }
 };
 
-const writeCartsFromFile = (users) => {
+export const getCarts = async (req, res) => {
   try {
-    fs.writeFileSync(filePath, JSON.stringify(users, null, 2), 'utf-8');
+    const result = await CartModel.getAll()
+    res.json(result);
+
   } catch (error) {
-    console.error("Error al escribir en el archivo:", error);
+    return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
   }
 };
 
-export const newCart = (req, res) => {
-  const { products } = req.body;
-
-  const newCart = {
-    id: Date.now(),
-    Time: moment().format('YYYY-MM-DD HH:mm:ss'),
-    products
-  };
-
-  const dataCarts = readCartsFromFile();
-  dataCarts.push(newCart);
-  writeCartsFromFile(dataCarts);
-
-  res.status(201).json({ message: "Carrito creado exitosamente.", cart: newCart });
-};
-
-export const getCarts = (req, res) => {
-  const dataCarts = readCartsFromFile();
-  res.send(dataCarts);
-};
-
-export const getCart = (req, res) => {
+export const getCart = async (req, res) => {
   const cartId = parseInt(req.params.cartId, 10);
 
   if (isNaN(cartId)) {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readCartsFromFile();
-  const cartFound = dataCarts.find((cart) => cart.id === cartId);
+  try {
+    const result = await CartModel.getById({ cartId });
 
-  if (!cartFound) {
-    return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
+    if (result.notFound) {
+      return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
+    }
+
+    res.json(result);
+  } catch (error) {
+    return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
   }
-
-  res.json(cartFound);
 };
 
-export const deleteCart = (req, res) => {
+export const deleteCart = async (req, res) => {
   const cartId = parseInt(req.params.cartId, 10);
 
   if (isNaN(cartId)) {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readCartsFromFile();
-  const cartIndex = dataCarts.findIndex((cart) => cart.id === cartId);
+  try {
+    const result = await CartModel.deleteCart({ cartId });
 
-  if (cartIndex === -1) {
-    return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
+    if (result.notFound) {
+      return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
+    }
+
+    res.status(200).json({ message: `Carrito con el ID: ${cartId} eliminado exitosamente.`, result });
+  } catch (error) {
+    return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
   }
-
-  const [deletedCart] = dataCarts.splice(cartIndex, 1);
-  writeCartsFromFile(dataCarts);
-
-  res.status(200).json({ message: `Carrito con el ID: ${cartId} eliminado exitosamente.`, deletedCart });
 };
 
-export const newProductOnCart = (req, res) => {
+export const newProductOnCart = async (req, res) => {
   const cartId = parseInt(req.params.cartId, 10);
 
   if (isNaN(cartId)) {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readCartsFromFile();
-  const cartFound = dataCarts.find((cart) => cart.id === cartId);
+  try {
+    const result = await CartModel.newProduct(req.body, cartId);
 
-  if (!cartFound) {
-    return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
-  }
+    if (result.notFound) {
+      return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
+    }
 
-  const { product, quantity } = req.body;
+    if (result.status === 'created') {
+      return res.status(201).json({
+        message: "Producto agregado al carrito exitosamente.",
+        product: result.newProduct
+      });
+    }
 
-  const productIndex = cartFound.products.findIndex((item) => item.product === product);
-
-  if (productIndex === -1) {
-    const newProduct = { product, quantity };
-
-    cartFound.products.push(newProduct);
-    writeCartsFromFile(dataCarts);
-    return res.status(201).json({ message: "Producto agregado al carrito exitosamente.", newProduct });
-  } else {
-    cartFound.products[productIndex].quantity += quantity;
-    writeCartsFromFile(dataCarts);
-    return res.status(200).json({ message: "Cantidad del producto actualizada exitosamente.", updatedProduct: cartFound.products[productIndex] });
+    if (result.status === 'updated') {
+      return res.status(200).json({
+        message: "Cantidad del producto actualizada exitosamente.",
+        product: result.updatedProduct
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
   }
 };
 
-export const getProductOnCart = (req, res) => {
+export const getProductOnCart = async (req, res) => {
   const cartId = parseInt(req.params.cartId, 10);
+  const productId = req.params.productId;
 
   if (isNaN(cartId)) {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readCartsFromFile();
-  const cartFound = dataCarts.find((cart) => cart.id === cartId);
+  try {
+    const result = await CartModel.updateProductOnCart({ cartId, productId });
 
-  if (!cartFound) {
-    return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}` });
-  }
+    if (result.notFound) {
+      return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
+    }
 
-  const productFound = cartFound.products.find((item) => item.product === req.params.productId);
+    if (result.productNotFound) {
+      return res.status(404).json({ message: `No existe ningún producto con el ID: ${req.params.productId}` });
+    }
 
-  if (productFound) {
-    return res.json(productFound);
-  } else {
-    return res.status(404).json({ message: `No existe ningún producto con el ID: ${req.params.productId}` });
+    return res.json(result);
+  } catch (error) {
+    return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
   }
 };
 
-export const updateProductOnCart = (req, res) => {
+export const updateProductOnCart = async (req, res) => {
   const cartId = parseInt(req.params.cartId, 10);
-
-  if (isNaN(cartId)) {
-    return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
-  }
-
-  const dataCarts = readCartsFromFile();
-  const cartFound = dataCarts.find((cart) => cart.id === cartId);
-
-  if (!cartFound) {
-    return res.status(404).json({ message: `No existe ningún carrito con el ID: ${cartId}` });
-  }
-
+  const productId = req.params.productId;
   const { quantity } = req.body;
-  const productId = req.params.productId;
-
-  const productIndex = cartFound.products.findIndex((item) => item.product === productId);
-
-  if (productIndex === -1) {
-    return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}` });
-  }
-
-  let productUpdated = false;
-  const updateMessages = {};
-
-  if (quantity !== undefined && cartFound.products[productIndex].quantity !== quantity) {
-    const oldQuantity = cartFound.products[productIndex].quantity;
-    updateMessages.quantity = `${oldQuantity} => ${quantity}`;
-    cartFound.products[productIndex].quantity = quantity;
-    productUpdated = true;
-  }
-
-  if (!productUpdated) {
-    return res.status(304).json({ message: "No se realizaron cambios." });
-  }
-
-  cartFound.updated = moment().format('YYYY-MM-DD HH:mm:ss');
-  writeCartsFromFile(dataCarts);
-  return res.status(200).json({ message: `Producto con el ID: ${productId} actualizado exitosamente.`, updates: updateMessages });
-};
-
-export const deleteProductOnCart = (req, res) => {
-  const cartId = parseInt(req.params.cartId, 10);
-  const productId = req.params.productId;
 
   if (isNaN(cartId)) {
     return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
   }
 
-  const dataCarts = readCartsFromFile();
-  const cartFound = dataCarts.find((cart) => cart.id === cartId);
+  try {
+    const result = await CartModel.updateProductOnCart({ cartId, productId, quantity });
 
-  if (!cartFound) {
-    return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}` });
+    if (result.notFound) {
+      return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
+    }
+
+    if (result.productNotFound) {
+      return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}.` });
+    }
+
+    if (!result.productUpdated) {
+      return res.status(304).json({ message: "No se realizaron cambios." });
+    }
+
+    return res.status(200).json({
+      message: `Producto con el ID: ${productId} actualizado exitosamente.`,
+      updates: result.updates
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
   }
-
-  const productIndex = cartFound.products.findIndex((item) => item.product === productId);
-
-  if (productIndex === -1) {
-    return res.status(404).json({ message: `No se encontró el producto con el ID: ${productId} en el carrito.` });
-  }
-
-  cartFound.products.splice(productIndex, 1);
-  writeCartsFromFile(dataCarts);
-
-  return res.status(200).json({ message: `Producto con el ID: ${productId} eliminado del carrito con el ID: ${cartId}.` });
 };
+
+
+export const deleteProductOnCart = async (req, res) => {
+  const cartId = parseInt(req.params.cartId, 10);
+  const productId = req.params.productId;
+
+  if (isNaN(cartId)) {
+      return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
+  }
+
+  try {
+      const result = await CartModel.deleteProductOnCart({ cartId, productId });
+
+      if (result.notFound) {
+          return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
+      }
+
+      if (result.productNotFound) {
+          return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}.` });
+      }
+
+      return res.status(200).json({
+          message: `Producto con el ID: ${productId} eliminado del carrito con el ID: ${cartId}.`,
+          deletedProduct: result
+      });
+  } catch (error) {
+      return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
+  }
+};
+

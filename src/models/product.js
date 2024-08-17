@@ -26,7 +26,6 @@ const writeProductsToFile = (products) => {
   }
 };
 
-
 export class ProductModel {
   static async getAll({ code, category, title }) {
     if (code) {
