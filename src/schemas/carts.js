@@ -17,6 +17,6 @@ export const cartItemSchema = z.object({
 }).strict();
 
 export const cartSchema = z.object({
-  products: z.array(cartItemSchema) 
+  products: z.array(cartItemSchema)
+    .nonempty({ message: "El array de productos no puede estar vacío." })
 }).strict();
-
