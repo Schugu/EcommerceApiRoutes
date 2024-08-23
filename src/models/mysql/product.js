@@ -6,7 +6,7 @@ const config = {
   port: 3306,
   user: 'root',
   password: '',
-  database: 'productsdb'
+  database: 'ecommercedb'
 }
 
 const connection = await mysql.createConnection(config);

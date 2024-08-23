@@ -23,5 +23,4 @@ router.delete('/carts/:cartId', CartController.delete);
 
 router.delete('/carts/:cartId/product/:productId', CartController.deleteProduct);
 
-
 export default router;

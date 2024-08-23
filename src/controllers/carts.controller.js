@@ -49,8 +49,15 @@ export class CartController {
   }
 
   static async getAll(req, res) {
+    const { cart_id, product_id, quantity } = req.query;
+
     try {
-      const result = await CartModel.getAll()
+      const result = await CartModel.getAll({ cart_id, product_id, quantity });
+
+      if (!result) {
+        return res.status(400).json({ message: "No se encontraron carritos." });
+      }
+
       res.json(result);
 
     } catch (error) {
