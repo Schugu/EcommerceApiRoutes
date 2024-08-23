@@ -37,10 +37,6 @@ export const productSchema = z.object({
     required_error: "El campo 'category' es requerido."
   })
     .max(50, { message: "La categoría no puede tener más de 50 caracteres." }),
-
-  thumbnails: z.array(z.string(), {
-    invalid_type_error: "Thumbnails debe ser un array.",
-  }).default([]),
 }).strict(); 
 
 

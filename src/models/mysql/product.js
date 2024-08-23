@@ -81,7 +81,7 @@ export class ProductModel {
     }
 
     const [dataProducts] = await connection.query(
-      'SELECT id, title, description, code, price, status, stock, category, thumbnails FROM product'
+      'SELECT id, title, description, code, price, status, stock, category FROM product'
     )
 
     return dataProducts;
