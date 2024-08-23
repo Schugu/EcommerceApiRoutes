@@ -3,34 +3,25 @@ import { Router } from 'express';
 import { validateSchema, validateSchemaPartial } from "../middlewares/validateSchema.js";
 import { cartItemSchema, cartSchema } from "../schemas/carts.js";
 
-import {
-  getCarts,
-  newCart,
-  getCart,
-  deleteCart,
-  newProductOnCart,
-  getProductOnCart,
-  updateProductOnCart,
-  deleteProductOnCart
-} from "../controllers/carts.controller.js";
+import { CartController } from "../controllers/carts.controller.js";
 
 const router = Router();
 
-router.post('/carts', validateSchema(cartSchema), newCart);
+router.post('/carts', validateSchema(cartSchema), CartController.newCart);
 
-router.get('/carts', getCarts);
+router.post('/carts/:cartId/product', validateSchema(cartItemSchema), CartController.newProduct);
 
-router.get('/carts/:cartId', getCart);
+router.get('/carts', CartController.getAll);
 
-router.delete('/carts/:cartId', deleteCart);
+router.get('/carts/:cartId', CartController.getById);
 
-router.get('/carts/:cartId/product/:productId', getProductOnCart);
+router.get('/carts/:cartId/product/:productId', CartController.getProduct);
 
-router.patch('/carts/:cartId/product/:productId', validateSchemaPartial(cartItemSchema), updateProductOnCart);
+router.patch('/carts/:cartId/product/:productId', validateSchemaPartial(cartItemSchema), CartController.updateProduct);
 
-router.post('/carts/:cartId/product', validateSchema(cartItemSchema), newProductOnCart);
+router.delete('/carts/:cartId', CartController.delete);
 
-router.delete('/carts/:cartId/product/:productId', deleteProductOnCart);
+router.delete('/carts/:cartId/product/:productId', CartController.deleteProduct);
 
 
 export default router;
