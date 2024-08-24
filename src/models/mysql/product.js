@@ -36,7 +36,7 @@ export class ProductModel {
       return productFound;
 
     } catch (error) {
-      throw new error('Error al crear un nuevo producto.');
+      throw new Error('Error al crear un nuevo producto.');
     }
   }
 
@@ -80,11 +80,15 @@ export class ProductModel {
       return dataProducts;
     }
 
-    const [dataProducts] = await connection.query(
-      'SELECT id, title, description, code, price, status, stock, category FROM product'
-    )
+    try {
+      const [dataProducts] = await connection.query(
+        'SELECT id, title, description, code, price, status, stock, category FROM product'
+      )
 
-    return dataProducts;
+      return dataProducts;
+    } catch (error) {
+      throw new Error('Error al encontrar los productos.');
+    }
   }
 
   static async getById({ productId }) {
@@ -156,11 +160,9 @@ export class ProductModel {
         [productId]
       );
 
-
       return productFound;
     } catch (error) {
-      throw new error('Error al eliminar el producto.')
+      throw new Error('Error al eliminar el producto.')
     }
-
   }
 }

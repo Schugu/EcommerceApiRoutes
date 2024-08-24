@@ -16,7 +16,7 @@ export class CartController {
     }
   }
 
-  static async newProduct(req, res) {
+  static async addProduct(req, res) {
     const cartId = parseInt(req.params.cartId, 10);
 
     if (isNaN(cartId)) {
@@ -24,9 +24,13 @@ export class CartController {
     }
 
     try {
-      const result = await CartModel.newProduct(req.body, cartId);
+      const result = await CartModel.addProduct({ input: req.body, cartId });
 
-      if (result.notFound) {
+      if (!result) {
+        return res.status(400).json({ message: `Error al añadir el producto.` });
+      }
+
+      if (result.cartNotFound) {
         return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
       }
 
@@ -49,10 +53,10 @@ export class CartController {
   }
 
   static async getAll(req, res) {
-    const { cart_id, product_id, quantity } = req.query;
+    const { user_id } = req.query;
 
     try {
-      const result = await CartModel.getAll({ cart_id, product_id, quantity });
+      const result = await CartModel.getAll({ user_id });
 
       if (!result) {
         return res.status(400).json({ message: "No se encontraron carritos." });
@@ -75,7 +79,7 @@ export class CartController {
     try {
       const result = await CartModel.getById({ cartId });
 
-      if (result.notFound) {
+      if (!result) {
         return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
       }
 
@@ -110,39 +114,6 @@ export class CartController {
     }
   }
 
-  static async updateProduct(req, res) {
-    const cartId = parseInt(req.params.cartId, 10);
-    const productId = req.params.productId;
-    const { quantity } = req.body;
-
-    if (isNaN(cartId)) {
-      return res.status(400).json({ message: "ID de carrito inválido. Debe ser un número." });
-    }
-
-    try {
-      const result = await CartModel.updateProduct({ cartId, productId, quantity });
-
-      if (result.notFound) {
-        return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
-      }
-
-      if (result.productNotFound) {
-        return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}.` });
-      }
-
-      if (!result.productUpdated) {
-        return res.status(304).json({ message: "No se realizaron cambios." });
-      }
-
-      return res.status(200).json({
-        message: `Producto con el ID: ${productId} actualizado exitosamente.`,
-        updates: result.updates
-      });
-    } catch (error) {
-      return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
-    }
-  }
-
   static async delete(req, res) {
     const cartId = parseInt(req.params.cartId, 10);
 
@@ -157,7 +128,7 @@ export class CartController {
         return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
       }
 
-      res.status(200).json({ message: `Carrito con el ID: ${cartId} eliminado exitosamente.`, result });
+      res.status(200).json({ message: `Carrito con el ID: ${cartId} eliminado exitosamente.`, cart: result });
     } catch (error) {
       return res.status(500).json({ message: "Error interno del servidor.", error: error.message });
     }
@@ -174,7 +145,7 @@ export class CartController {
     try {
       const result = await CartModel.deleteProduct({ cartId, productId });
 
-      if (result.notFound) {
+      if (result.cartNotFound) {
         return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
       }
 

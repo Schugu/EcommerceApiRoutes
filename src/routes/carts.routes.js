@@ -9,15 +9,13 @@ const router = Router();
 
 router.post('/carts', validateSchema(cartSchema), CartController.newCart);
 
-router.post('/carts/:cartId/product', validateSchema(cartItemSchema), CartController.newProduct);
+router.post('/carts/:cartId/product', validateSchema(cartItemSchema), CartController.addProduct);
 
 router.get('/carts', CartController.getAll);
 
 router.get('/carts/:cartId', CartController.getById);
 
 router.get('/carts/:cartId/product/:productId', CartController.getProduct);
-
-router.patch('/carts/:cartId/product/:productId', validateSchemaPartial(cartItemSchema), CartController.updateProduct);
 
 router.delete('/carts/:cartId', CartController.delete);
 
