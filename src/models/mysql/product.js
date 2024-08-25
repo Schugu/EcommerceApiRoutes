@@ -107,21 +107,12 @@ export class ProductModel {
   static async update(input, productId) {
     const { title, description, code, price, stock, category } = input;
 
-    const [dataProducts] = await connection.query(
+    const [dataProduct] = await connection.query(
       `SELECT * FROM product WHERE id = ?`,
       [productId]
     );
 
-    if (dataProducts.length === 0) {
-      return null;
-    }
-
-    const [existingCode] = await connection.query(
-      `SELECT * FROM product WHERE LOWER(code) = LOWER(?) AND id != ?`,
-      [code, productId]
-    );
-
-    if (existingCode.length > 0) {
+    if (dataProduct.length === 0) {
       return null;
     }
 

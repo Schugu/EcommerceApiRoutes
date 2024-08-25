@@ -1,10 +1,11 @@
-import { CartModel } from "../models/mysql/cart.js";
-
-
 export class CartController {
-  static async newCart(req, res) {
+  constructor({ cartModel }) {
+    this.cartModel = cartModel;
+  }
+
+  newCart = async (req, res) => {
     try {
-      const result = await CartModel.newCart(req.body);
+      const result = await this.cartModel.newCart(req.body);
 
       if (!result) {
         return res.status(400).json({ message: `Error al crear el carrito.` });
@@ -16,7 +17,7 @@ export class CartController {
     }
   }
 
-  static async addProduct(req, res) {
+  addProduct = async (req, res) => {
     const cartId = parseInt(req.params.cartId, 10);
 
     if (isNaN(cartId)) {
@@ -24,7 +25,7 @@ export class CartController {
     }
 
     try {
-      const result = await CartModel.addProduct({ input: req.body, cartId });
+      const result = await this.cartModel.addProduct({ input: req.body, cartId });
 
       if (!result) {
         return res.status(400).json({ message: `Error al añadir el producto.` });
@@ -52,11 +53,11 @@ export class CartController {
     }
   }
 
-  static async getAll(req, res) {
+  getAll = async (req, res) => {
     const { user_id } = req.query;
 
     try {
-      const result = await CartModel.getAll({ user_id });
+      const result = await this.cartModel.getAll({ user_id });
 
       if (!result) {
         return res.status(400).json({ message: "No se encontraron carritos." });
@@ -69,7 +70,7 @@ export class CartController {
     }
   }
 
-  static async getById(req, res) {
+  getById = async (req, res) => {
     const cartId = parseInt(req.params.cartId, 10);
 
     if (isNaN(cartId)) {
@@ -77,7 +78,7 @@ export class CartController {
     }
 
     try {
-      const result = await CartModel.getById({ cartId });
+      const result = await this.cartModel.getById({ cartId });
 
       if (!result) {
         return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
@@ -89,7 +90,7 @@ export class CartController {
     }
   }
 
-  static async getProduct(req, res) {
+  getProduct = async (req, res) => {
     const cartId = parseInt(req.params.cartId, 10);
     const productId = req.params.productId;
 
@@ -98,7 +99,7 @@ export class CartController {
     }
 
     try {
-      const result = await CartModel.getProduct({ cartId, productId });
+      const result = await this.cartModel.getProduct({ cartId, productId });
 
       if (result.notFound) {
         return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
@@ -114,7 +115,7 @@ export class CartController {
     }
   }
 
-  static async delete(req, res) {
+  delete = async (req, res) => {
     const cartId = parseInt(req.params.cartId, 10);
 
     if (isNaN(cartId)) {
@@ -122,7 +123,7 @@ export class CartController {
     }
 
     try {
-      const result = await CartModel.delete({ cartId });
+      const result = await this.cartModel.delete({ cartId });
 
       if (result.notFound) {
         return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
@@ -134,7 +135,7 @@ export class CartController {
     }
   }
 
-  static async deleteProduct(req, res) {
+  deleteProduct = async (req, res) => {
     const cartId = parseInt(req.params.cartId, 10);
     const productId = req.params.productId;
 
@@ -143,7 +144,7 @@ export class CartController {
     }
 
     try {
-      const result = await CartModel.deleteProduct({ cartId, productId });
+      const result = await this.cartModel.deleteProduct({ cartId, productId });
 
       if (result.cartNotFound) {
         return res.status(404).json({ message: `No se encontró el carrito con el ID: ${cartId}.` });
@@ -162,3 +163,4 @@ export class CartController {
     }
   }
 }
+

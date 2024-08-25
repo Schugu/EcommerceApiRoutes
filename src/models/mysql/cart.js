@@ -65,6 +65,7 @@ export class CartModel {
   }
 
   static async getById({ cartId }) {
+    console.log(cartId)
     try {
       const [cartFound] = await connection.query(
         `SELECT * FROM cart_items WHERE cart_id = ?`,
@@ -175,7 +176,7 @@ export class CartModel {
         FROM carts c
         JOIN cart_items ci ON c.id = ci.cart_id
         JOIN product p ON ci.product_id = p.id
-        WHERE c.id = 1 AND p.id = 2;`
+        WHERE c.id = (?) AND p.id = (?);`, [cartId, productId]
     );
 
     return product;

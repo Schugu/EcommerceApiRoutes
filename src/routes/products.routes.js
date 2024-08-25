@@ -5,16 +5,22 @@ import { productSchema } from "../schemas/products.js";
 
 import { ProductController } from "../controllers/products.controller.js";
 
-const router = Router();
 
-router.post('/products', validateSchema(productSchema), ProductController.newProduct);
+export const createProductRouter = ({ productModel }) => {
+  const productsRouter = Router();
 
-router.get('/products', ProductController.getAll);
+  const productController = new ProductController({ productModel });
 
-router.get('/products/:productId', ProductController.getById);
 
-router.patch('/products/:productId', validateSchemaPartial(productSchema), ProductController.update);
+  productsRouter.post('/products', validateSchema(productSchema), productController.newProduct);
 
-router.delete('/products/:productId', ProductController.delete);
+  productsRouter.get('/products', productController.getAll);
 
-export default router;
+  productsRouter.get('/products/:productId', productController.getById);
+
+  productsRouter.patch('/products/:productId', validateSchemaPartial(productSchema), productController.update);
+
+  productsRouter.delete('/products/:productId', productController.delete);
+
+  return productsRouter;
+}

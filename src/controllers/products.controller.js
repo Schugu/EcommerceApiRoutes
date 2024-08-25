@@ -1,9 +1,11 @@
-import { ProductModel } from "../models/mysql/product.js";
-
 export class ProductController {
-  static async newProduct(req, res) {
+  constructor({ productModel }) {
+    this.productModel = productModel;
+  }
+
+  newProduct = async (req, res) => {
     try {
-      const result = await ProductModel.newProduct(req.body);
+      const result = await this.productModel.newProduct(req.body);
 
       if (!result) {
         return res.status(400).json({ message: `El producto con el código ${req.body.code} ya existe.` });
@@ -15,11 +17,11 @@ export class ProductController {
     }
   }
 
-  static async getAll(req, res) {
+  getAll = async (req, res) => {
     const { code, category, title } = req.query;
 
     try {
-      const result = await ProductModel.getAll({ code, category, title });
+      const result = await this.productModel.getAll({ code, category, title });
 
       if (!result) {
         return res.status(400).json({ message: "No se encontraron productos." });
@@ -32,7 +34,7 @@ export class ProductController {
     }
   }
 
-  static async getById(req, res) {
+  getById = async (req, res) => {
     const productId = parseInt(req.params.productId, 10);
 
     if (isNaN(productId)) {
@@ -40,7 +42,7 @@ export class ProductController {
     }
 
     try {
-      const result = await ProductModel.getById({ productId });
+      const result = await this.productModel.getById({ productId });
 
       if (!result) {
         return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}` });
@@ -52,7 +54,7 @@ export class ProductController {
     }
   }
 
-  static async update(req, res) {
+  update = async (req, res) => {
     const productId = parseInt(req.params.productId, 10);
 
     if (isNaN(productId) || productId < 1) {
@@ -60,7 +62,7 @@ export class ProductController {
     }
 
     try {
-      const result = await ProductModel.update(req.body, productId);
+      const result = await this.productModel.update(req.body, productId);
 
       if (!result) {
         return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}` });
@@ -72,7 +74,7 @@ export class ProductController {
     }
   }
 
-  static async delete(req, res) {
+  delete = async (req, res) => {
     const productId = parseInt(req.params.productId, 10);
 
     if (isNaN(productId) || productId < 1) {
@@ -80,7 +82,7 @@ export class ProductController {
     }
 
     try {
-      const result = await ProductModel.delete({ productId });
+      const result = await this.productModel.delete({ productId });
 
       if (!result) {
         return res.status(404).json({ message: `No existe ningún producto con el ID: ${productId}` });

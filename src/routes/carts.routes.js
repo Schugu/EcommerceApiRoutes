@@ -1,24 +1,26 @@
 import { Router } from 'express';
 
-import { validateSchema, validateSchemaPartial } from "../middlewares/validateSchema.js";
+import { validateSchema } from "../middlewares/validateSchema.js";
 import { cartItemSchema, cartSchema } from "../schemas/carts.js";
 
 import { CartController } from "../controllers/carts.controller.js";
 
-const router = Router();
 
-router.post('/carts', validateSchema(cartSchema), CartController.newCart);
+export const createCartRouter = ({ cartModel }) => {
+  const cartsRouter = Router();
 
-router.post('/carts/:cartId/product', validateSchema(cartItemSchema), CartController.addProduct);
+  const cartController = new CartController({ cartModel });
 
-router.get('/carts', CartController.getAll);
 
-router.get('/carts/:cartId', CartController.getById);
+  cartsRouter.post('/carts', validateSchema(cartSchema), cartController.newCart);
+  cartsRouter.post('/carts/:cartId/product', validateSchema(cartItemSchema), cartController.addProduct);
 
-router.get('/carts/:cartId/product/:productId', CartController.getProduct);
+  cartsRouter.get('/carts', cartController.getAll);
+  cartsRouter.get('/carts/:cartId', cartController.getById);
+  cartsRouter.get('/carts/:cartId/product/:productId', cartController.getProduct);
 
-router.delete('/carts/:cartId', CartController.delete);
+  cartsRouter.delete('/carts/:cartId', cartController.delete);
+  cartsRouter.delete('/carts/:cartId/product/:productId', cartController.deleteProduct);
 
-router.delete('/carts/:cartId/product/:productId', CartController.deleteProduct);
-
-export default router;
+  return cartsRouter;
+}
